@@ -33,14 +33,16 @@ y un nodo **Usuario** que inserta registros y los replica en anillo entre las 4 
 └── docs/GUIA.html                       Guía detallada con capturas y problemas comunes
 ```
 
-### Archivos que NO están en el repositorio
+### Archivos que van aparte
 
 | Archivo | Por qué | Dónde conseguirlo |
 |---|---|---|
-| `Win-SQL.ova` (7.3 GB) | GitHub no acepta archivos de más de 100 MB | **[Descargar de Google Drive](PEGAR_AQUI_EL_ENLACE)** |
+| `Win-SQL.ova` (7.3 GB) en 4 pedazos: `Win-SQL.ova.001` … `.004` y `Win-SQL.ova.sha256` | GitHub no acepta archivos de más de 100 MB en el repositorio | **[Release v1.0](../../releases/tag/v1.0)** de este repositorio (sección *Assets*) |
 | `c7200-adventerprisek9-mz.124-24.T5.image` | Imagen de Cisco IOS con licencia; no se puede publicar | Pídela a tu profesor o compañeros |
 
-Pon los dos archivos en una carpeta `descargas/` dentro del repositorio. `instalar.ps1` los busca ahí.
+Pon todos esos archivos en una carpeta `descargas/` dentro del repositorio. `instalar.ps1` los busca ahí,
+**une los 4 pedazos solo** y comprueba con la huella SHA-256 que el `.ova` quedó idéntico.
+(También puedes unirlos a mano con doble clic en `unir.cmd`, que viene en el Release.)
 
 ---
 
@@ -61,7 +63,11 @@ Pon los dos archivos en una carpeta `descargas/` dentro del repositorio. `instal
 
 ## Instalación
 
-1. Clona o descarga el repositorio y pon `Win-SQL.ova` y la imagen c7200 en `descargas/`.
+1. Clona o descarga el repositorio. Crea la carpeta `descargas/` y pon ahí los 4 pedazos de la VM con su `.sha256` (del Release) y la imagen c7200.
+   Con GitHub CLI se descargan así:
+   ```powershell
+   gh release download v1.0 --repo hernandezalvirdemariaguadalupe-cyber/practica-parcial3-gns3 --dir descargas
+   ```
 2. Abre **GNS3** y espera a que la GNS3 VM salga en verde.
 3. En la carpeta del repositorio ejecuta:
    ```powershell

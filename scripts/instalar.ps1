@@ -77,7 +77,24 @@ $vms = & $vbm list vms
 if ($vms -match '"Win-SQL"') { Bien 'La VM Win-SQL ya existe en VirtualBox' }
 else {
   $ova = Buscar 'Win-SQL.ova'
-  if (-not $ova) { Mal 'No encuentro Win-SQL.ova. Descargalo (ver README) y ponlo en la carpeta descargas\ del repositorio.' }
+  if (-not $ova) {
+    # Si llego en pedazos (Win-SQL.ova.001, .002, ...), se unen aqui mismo
+    $p1 = Buscar 'Win-SQL.ova.001'
+    if (-not $p1) { Mal 'No encuentro Win-SQL.ova ni sus pedazos (Win-SQL.ova.001, .002...). Ponlos en esta misma carpeta.' }
+    $dirP = Split-Path -Parent $p1; $ova = Join-Path $dirP 'Win-SQL.ova'
+    $partes = Get-ChildItem $dirP -Filter 'Win-SQL.ova.0*' | Where-Object { $_.Name -match '\.\d{3}$' } | Sort-Object Name
+    Write-Host "   Uniendo $($partes.Count) pedazos de Win-SQL.ova (unos minutos)..."
+    $outS = [IO.File]::Create("$ova.tmp"); $bufU = New-Object byte[] (64MB)
+    try { foreach ($pt in $partes) { $inS = [IO.File]::OpenRead($pt.FullName); try { while (($r = $inS.Read($bufU, 0, $bufU.Length)) -gt 0) { $outS.Write($bufU, 0, $r) } } finally { $inS.Close() } } }
+    finally { $outS.Close() }
+    $sha = Join-Path $dirP 'Win-SQL.ova.sha256'
+    if (Test-Path $sha) {
+      $esperado = ((Get-Content $sha -TotalCount 1) -split '\s+')[0].ToLower()
+      Write-Host '   Comprobando que el archivo unido quedo identico...'
+      if ((Get-FileHash "$ova.tmp" -Algorithm SHA256).Hash.ToLower() -ne $esperado) { Mal 'El archivo unido no coincide. Falta un pedazo o alguno se descargo mal; vuelve a descargarlos.' }
+    }
+    Move-Item "$ova.tmp" $ova -Force; Bien 'Pedazos unidos en Win-SQL.ova'
+  }
   Write-Host '   Importando Win-SQL.ova en VirtualBox (puede tardar 10-20 minutos)...'
   & $vbm import $ova --vsys 0 --vmname 'Win-SQL'
   if ($LASTEXITCODE -ne 0) { Mal 'Fallo la importacion del .ova' }
