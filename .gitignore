@@ -1,0 +1,19 @@
+# Archivos grandes o con licencia: se comparten por fuera de GitHub
+*.ova
+*.vdi
+*.vmdk
+*.image
+*.bin
+descargas/
+
+# Resultados generados al correr verificar.ps1 en cada maquina
+scripts/capturas/
+scripts/resultados/
+resultados/
+
+# Temporales
+*.tmp
+__pycache__/
+*.pyc
+Thumbs.db
+desktop.ini

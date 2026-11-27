@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Práctica Parcial 3 – Guía</title>
+<style>
+  :root { --tinta:#1f2933; --suave:#52606d; --linea:#d9e2ec; --fondo:#f7f9fb; --acento:#1d6fb8; --ok:#1f8a4c; --alerta:#b45309; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: "Segoe UI", system-ui, sans-serif; color:var(--tinta); background:#fff; line-height:1.55; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { font-size: 30px; margin: 0 0 4px; }
+  h2 { font-size: 22px; margin: 40px 0 10px; padding-top: 12px; border-top: 1px solid var(--linea); }
+  h3 { font-size: 17px; margin: 22px 0 6px; }
+  p.sub { color: var(--suave); margin: 0 0 20px; }
+  code, pre { font-family: Consolas, "Cascadia Mono", monospace; font-size: 14px; }
+  code { background: var(--fondo); border: 1px solid var(--linea); border-radius: 4px; padding: 1px 5px; }
+  pre { background: #1e1e1e; color: #e5e5e5; padding: 12px 14px; border-radius: 8px; overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0 16px; font-size: 15px; }
+  th, td { border: 1px solid var(--linea); padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--fondo); }
+  .nota { border-left: 4px solid var(--acento); background: #eef5fc; padding: 10px 14px; border-radius: 4px; margin: 12px 0; }
+  .alerta { border-left: 4px solid var(--alerta); background: #fdf5ea; padding: 10px 14px; border-radius: 4px; margin: 12px 0; }
+  .ok { color: var(--ok); font-weight: 600; }
+  ol li, ul li { margin: 4px 0; }
+  figure { margin: 14px 0 26px; }
+  figure img { max-width: 100%; border: 1px solid var(--linea); border-radius: 8px; display: block; }
+  figcaption { color: var(--suave); font-size: 14px; margin-top: 6px; }
+  nav { background: var(--fondo); border: 1px solid var(--linea); border-radius: 8px; padding: 10px 18px; }
+  nav a { color: var(--acento); text-decoration: none; }
+</style>
+</head>
+<body>
+<main>
+<h1>Práctica del Parcial 3 – Bases de datos en GNS3</h1>
+<p class="sub">Topología en GNS3 con 4 bases de datos (SQL Server en Windows, MariaDB, MongoDB y PostgreSQL en Linux), routers con OSPF y un Usuario que inserta y replica registros en anillo.</p>
+
+<nav>
+  <b>Contenido:</b>
+  <a href="#paquete">1. Qué trae</a> ·
+  <a href="#requisitos">2. Requisitos</a> ·
+  <a href="#instalar">3. Instalar</a> ·
+  <a href="#probar">4. Probar</a> ·
+  <a href="#capturas">5. Capturas</a> ·
+  <a href="#manual">6. Pruebas a mano</a> ·
+  <a href="#problemas">7. Problemas comunes</a>
+</nav>
+
+<h2 id="paquete">1. Qué trae el paquete</h2>
+<table>
+  <tr><th>Archivo</th><th>Para qué sirve</th></tr>
+  <tr><td><code>Practica_Parcial3.gns3project</code></td><td>El proyecto de GNS3: routers, contenedores, cables, configuraciones e imagen del router c7200.</td></tr>
+  <tr><td><code>Win-SQL.ova</code></td><td>La máquina virtual de Windows Server 2022 con SQL Server (nodo 1). GNS3 no permite meterla dentro del proyecto, por eso va aparte.</td></tr>
+  <tr><td><code>instalar.ps1</code></td><td>Importa la VM y el proyecto, y conecta SQL Server al router R2. Lo hace todo solo.</td></tr>
+  <tr><td><code>verificar.ps1</code></td><td>Corre las 9 pruebas, dice PASA/FALLA y genera capturas en <code>capturas\</code>.</td></tr>
+  <tr><td><code>codigo\</code></td><td><code>practica.py</code> (insertar y replicar), <code>probar_bases.py</code> (login a las 4 bases) e <code>install_sql.ps1</code> (cómo se instaló SQL Server).</td></tr>
+  <tr><td><code>capturas\</code></td><td>Las capturas de las pruebas hechas en la máquina original (las de abajo).</td></tr>
+</table>
+
+<h3>Topología y direcciones</h3>
+<figure><img src="capturas/topologia.png" alt="Topología del proyecto"><figcaption>Topología generada por <code>verificar.ps1</code> (verde = contenedor, azul = router, naranja = VM de Windows).</figcaption></figure>
+<table>
+  <tr><th>#</th><th>Nodo</th><th>Sistema</th><th>IP : puerto</th><th>Usuario / contraseña (laboratorio)</th><th>Router</th></tr>
+  <tr><td>–</td><td>Usuario</td><td>Linux (Python)</td><td>192.168.10.10</td><td>–</td><td>R1-Central</td></tr>
+  <tr><td>1</td><td>SQLServer-1</td><td>Windows Server 2022</td><td>192.168.20.10 : 1433</td><td>sa / Practica123!</td><td>R2 (vía Nube-1)</td></tr>
+  <tr><td>2</td><td>MariaDB-2</td><td>Linux</td><td>192.168.30.10 : 3306</td><td>root / Practica123</td><td>R2 (vía Nube-1)</td></tr>
+  <tr><td>3</td><td>MongoDB-3</td><td>Linux</td><td>192.168.40.10 : 27017</td><td>sin contraseña</td><td>R3 (vía Nube-2)</td></tr>
+  <tr><td>4</td><td>Postgres-4</td><td>Linux</td><td>192.168.50.10 : 5432</td><td>postgres / Practica123</td><td>R3 (vía Nube-2)</td></tr>
+</table>
+<p>Enlaces entre routers: seriales /30 en 10.0.1.0 – 10.0.4.0, todos en OSPF área 0. Windows (Win-SQL): usuario <code>Administrator</code> o <code>Admin</code>, contraseña <code>Practica123!</code>. Son contraseñas solo de laboratorio.</p>
+
+<h2 id="requisitos">2. Requisitos de la computadora</h2>
+<ul>
+  <li>Windows 10/11 con <b>16 GB de RAM</b> (8 GB no alcanzan) y unos <b>30 GB libres</b>.</li>
+  <li>Virtualización activada en la BIOS (Intel VT-x / AMD-V).</li>
+  <li><b>VirtualBox 7.x</b>.</li>
+  <li><b>GNS3 2.2.61</b> y la <b>GNS3 VM 2.2.61 para VirtualBox</b> (la misma versión), desde <code>github.com/GNS3/gns3-gui/releases</code>.</li>
+  <li>En GNS3: <i>Edit → Preferences → GNS3 VM</i> → <b>Enable the GNS3 VM</b>, motor <b>VirtualBox</b>, VM <b>"GNS3 VM"</b>, 4 vCPUs y 6144 MB de RAM. Debe salir <span class="ok">en verde</span> en <i>Servers Summary</i>.</li>
+</ul>
+<div class="alerta"><b>Importante: hipervisor de Windows.</b> Si Hyper-V o la "Seguridad basada en virtualización" están activos, VirtualBox va lento o se cierra con un error de memoria. <code>instalar.ps1</code> te avisa. Para apagarlo, abre <b>Terminal (Administrador)</b>, ejecuta lo siguiente y <b>reinicia</b>:
+<pre>bcdedit /set hypervisorlaunchtype off
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard" /v EnableVirtualizationBasedSecurity /t REG_DWORD /d 0 /f</pre>
+Además, en <i>Seguridad de Windows → Seguridad del dispositivo → Aislamiento del núcleo</i>, deja <b>Integridad de memoria</b> en <b>Desactivado</b>.</div>
+
+<h2 id="instalar">3. Instalar</h2>
+<ol>
+  <li>Copia toda esta carpeta a tu computadora (por ejemplo a <code>Documentos\Practica_Parcial3</code>).</li>
+  <li>Abre <b>GNS3</b> y espera a que la GNS3 VM salga en verde.</li>
+  <li>En la carpeta, haz clic derecho en un espacio vacío → <b>Abrir en Terminal</b> y ejecuta:
+<pre>powershell -ExecutionPolicy Bypass -File .\instalar.ps1</pre>
+  Tarda de 10 a 20 minutos la primera vez, porque importa la VM de Windows. Al final dice <span class="ok">Listo: Practica_Parcial3 tiene 11 nodos</span>.</li>
+  <li>En GNS3: <b>File → Open project → Practica_Parcial3</b>, si no se abrió solo.</li>
+  <li>Presiona <b>Start</b> (el botón ▶ verde) y espera <b>unos 3 minutos</b>. Los routers y Windows tardan en arrancar, y la primera vez la GNS3 VM descarga de internet las imágenes de MariaDB, MongoDB, PostgreSQL y Python.</li>
+</ol>
+
+<h2 id="probar">4. Probar que todo funciona</h2>
+<p>Con todo encendido, en la misma terminal:</p>
+<pre>powershell -ExecutionPolicy Bypass -File .\verificar.ps1</pre>
+<p>El script corre estas pruebas y al final muestra el resumen. Debe decir <span class="ok">PASAN: 9 de 9</span>:</p>
+<table>
+  <tr><th>#</th><th>Prueba</th><th>Qué demuestra</th></tr>
+  <tr><td>01</td><td>Nodos encendidos</td><td>Los 10 nodos (más el NAT) están corriendo.</td></tr>
+  <tr><td>02</td><td>OSPF en R1-Central</td><td>Tiene 2 vecinos (Nube-1 y Nube-2) en FULL y aprendió las 4 redes de bases.</td></tr>
+  <tr><td>03</td><td>OSPF en Nube-1, Nube-2, R2 y R3</td><td>Todos los routers formaron adyacencia.</td></tr>
+  <tr><td>04</td><td>Ping a las 4 bases</td><td>El Usuario llega a cada servidor por la red.</td></tr>
+  <tr><td>05</td><td>Traceroute</td><td>Los paquetes pasan por el camino correcto: R1-Central → Nube-1 → R2, y R1-Central → Nube-2 → R3.</td></tr>
+  <tr><td>06</td><td>Login a las 4 bases</td><td>Cada motor acepta la conexión con usuario y contraseña.</td></tr>
+  <tr><td>07</td><td>Insertar</td><td>Se inserta 1 registro en cada base (4 en total).</td></tr>
+  <tr><td>08</td><td>Replicación en anillo</td><td>1→2→3→4→1: cada base termina con los 4 registros.</td></tr>
+  <tr><td>09</td><td>Mostrar registros</td><td>Las 4 bases tienen los mismos 4 registros.</td></tr>
+</table>
+<div class="nota">Las pruebas 07 a 09 <b>borran y vuelven a crear</b> los registros de prueba. Si no quieres tocar los datos, usa <code>.\verificar.ps1 -SinReplicacion</code>. Las capturas quedan en <code>capturas\</code> y la salida completa en <code>resultados\</code>.</div>
+
+<h2 id="capturas">5. Capturas de la máquina original</h2>
+<figure><img src="capturas/00_resumen.png" alt="Resumen"><figcaption>Resumen: 9 de 9 pruebas pasan.</figcaption></figure>
+<figure><img src="capturas/02.png" alt="OSPF en R1-Central"><figcaption>02 – Vecinos OSPF y rutas aprendidas en R1-Central.</figcaption></figure>
+<figure><img src="capturas/03.png" alt="OSPF en los demás routers"><figcaption>03 – Adyacencias OSPF en Nube-1, Nube-2, R2 y R3.</figcaption></figure>
+<figure><img src="capturas/04.png" alt="Ping"><figcaption>04 – Ping del Usuario a las 4 bases.</figcaption></figure>
+<figure><img src="capturas/05.png" alt="Traceroute"><figcaption>05 – Camino de los paquetes (traceroute por ICMP).</figcaption></figure>
+<figure><img src="capturas/06.png" alt="Login a las bases"><figcaption>06 – Conexión real a SQL Server, MariaDB, MongoDB y PostgreSQL.</figcaption></figure>
+<figure><img src="capturas/07.png" alt="Insertar"><figcaption>07 – Un registro insertado en cada base.</figcaption></figure>
+<figure><img src="capturas/08.png" alt="Replicar"><figcaption>08 – Replicación en anillo: cada base queda con 4 registros.</figcaption></figure>
+<figure><img src="capturas/09.png" alt="Mostrar"><figcaption>09 – Los mismos 4 registros en las 4 bases.</figcaption></figure>
+<figure><img src="capturas/01.png" alt="Nodos"><figcaption>01 – Estado de los nodos.</figcaption></figure>
+
+<h2 id="manual">6. Pruebas a mano (para el video)</h2>
+<h3>En la consola de R1-Central (doble clic en el router)</h3>
+<pre>show ip ospf neighbor
+show ip route ospf</pre>
+<h3>En la consola del Usuario</h3>
+<pre>/gns3/bin/busybox ping -c 2 192.168.20.10
+/gns3/bin/busybox traceroute -I -n 192.168.50.10
+python3 /root/probar_bases.py
+cd /root
+python3 practica.py        # menú: 6 limpiar, 3 demo, 1 estado, 4 replicar, 5 mostrar</pre>
+<h3>Demostrar que va por la red</h3>
+<p>Clic derecho en <b>Nube-2 → Stop</b> y repite <code>probar_bases.py</code>: MongoDB y PostgreSQL fallan, mientras SQL Server y MariaDB siguen funcionando. Enciende Nube-2 de nuevo, espera 1 minuto y todo regresa.</p>
+
+<h2 id="problemas">7. Problemas comunes</h2>
+<table>
+  <tr><th>Síntoma</th><th>Solución</th></tr>
+  <tr><td>Al abrir el proyecto: <i>"bridge 'bridge0' has already 2 allocated NIOs"</i></td><td>Quedaron conexiones de una sesión anterior. Da OK, cierra GNS3, espera 30 segundos y vuelve a abrir el proyecto. Siempre detén los nodos (■ Stop) antes de cerrar GNS3.</td></tr>
+  <tr><td>VirtualBox se cierra con <i>"La memoria no se pudo written"</i>, o Windows va muy lento</td><td>El hipervisor de Windows está activo. Ver el recuadro de la sección 2.</td></tr>
+  <tr><td>GNS3 se queda en <i>"GNS3 VM is starting"</i></td><td>Revisa que la GNS3 VM sea la versión 2.2.61 y que su adaptador 1 sea <i>Solo-anfitrión</i> (VirtualBox → GNS3 VM → Configuración → Red).</td></tr>
+  <tr><td>Falla la prueba 06 solo con SQL Server</td><td>Windows todavía está arrancando. Espera 2 minutos más y repite <code>verificar.ps1</code>.</td></tr>
+  <tr><td><i>"Win-SQL is already used by SQLServer-1"</i></td><td>La VM ya está en otro proyecto abierto. Cierra el otro proyecto.</td></tr>
+  <tr><td>MariaDB o PostgreSQL no responden después de reiniciar</td><td>Ya viene corregido en el proyecto: MariaDB borra su <code>tc.log</code> dañado y PostgreSQL recrea sus carpetas al arrancar. Detén y vuelve a encender ese nodo.</td></tr>
+</table>
+</main>
+</body>
+</html>
